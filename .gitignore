@@ -2,3 +2,4 @@ __pycache__/
 .ipynb_checkpoints/
 hemlock-venv/
 data.db
+owid-covid-data.csv
