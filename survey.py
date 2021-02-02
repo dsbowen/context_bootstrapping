@@ -1,11 +1,12 @@
 from forecasts import forecast_questions
 
 from flask_login import current_user
-from hemlock import Branch, Page, Embedded, Binary, Dashboard, Input, Textarea, Label, Validate as V, Navigate as N, route
-from hemlock.tools import Assigner, Randomizer, consent_page, completion_page
+from hemlock import Branch, Page, Embedded, Blank, Check, Dashboard, Input, Textarea, Label, Validate as V, Navigate as N, route
+from hemlock.tools import Assigner, Randomizer, consent_page, completion_page, html_list
 
 from random import shuffle
 
+CONFIDENCE_INTERVALS = (10, 50, 90)
 N_FCASTS = 1
 
 assigner = Assigner({
@@ -17,7 +18,6 @@ fcast_selector = Randomizer(forecast_questions, r=N_FCASTS)
 @route('/survey')
 def start():
     conditions = assigner.next()
-    print(conditions)
     fcast_questions = make_fcast_questions()
     intro_page = Page(
         Label(
@@ -35,8 +35,8 @@ def start():
     return Branch(
         intro_page,
         *[
-            make_first_estimate_page(content, fcast_input)
-            for content, fcast_input in fcast_questions
+            make_first_estimate_page(content, fcast_inputs)
+            for content, fcast_inputs in fcast_questions
         ],
         navigate=N.second_estimates(fcast_questions)
     )
@@ -60,24 +60,13 @@ def second_estimates(first_estimate_branch, fcast_questions):
     return Branch(
         intro_page,
         *[
-            make_second_estimate_page(content, fcast_input)
-            for content, fcast_input in fcast_questions
+            make_second_estimate_page(content, fcast_inputs)
+            for content, fcast_inputs in fcast_questions
         ],
         completion_page()
     )
 
 def make_fcast_questions():
-    def make_question(content):
-        if current_user.meta['Context'] == 'both':
-            content_ = content['context']
-        else:
-            content_ = content['no_context']
-        return Input(
-            content_['question'],
-            var='FirstEstimate', append=content_['append'],
-            type='number', required=True
-        )
-        
     fcast_content = fcast_selector.next()
     fcast_content = (
         list(fcast_content) if isinstance(fcast_content, tuple)
@@ -87,43 +76,83 @@ def make_fcast_questions():
     current_user.embedded.append(
         Embedded('Forecast', [q['name'] for q in fcast_content])
     )
-    return [[content, make_question(content)] for content in fcast_content]
+    return [[content, make_questions(content, first_estimate=True)] for content in fcast_content]
 
-def make_first_estimate_page(content, fcast_input):
+def make_questions(content, first_estimate):
+    def make_question(ci, content):
+        return Blank(
+            (content['question'][0].format(ci), content['question'][1]),
+            var=var+str(ci), append=content['append'],
+            blank_empty='_____', type='number', required=True
+        )
+
+    if (
+        (
+            first_estimate 
+            and current_user.meta['Context'] == 'both'
+        )
+        or (
+            not first_estimate 
+            and current_user.meta['Context'] != 'neither'
+        )
+    ):
+        content_ = content['context']
+        var = 'FirstEstimate'
+    else:
+        content_ = content['no_context']
+        var = 'SecondEstimate'
+    return [make_question(ci, content_) for ci in CONFIDENCE_INTERVALS]
+
+def make_first_estimate_page(content, fcast_inputs):
     content = content.copy()
     content['use_context'] = current_user.meta['Context'] == 'both'
     return Page(
         Dashboard(src='/dashapp/', g=content), 
-        fcast_input,
+        *fcast_inputs,
         timer='FirstEstimateTime'
     )
 
-def make_second_estimate_page(content, fcast_input):
+def make_second_estimate_page(content, fcast_inputs):
+    def make_reminder(reminder_txt):
+        return html_list(
+            *[
+                (
+                    'There is a {} in 100 chance '+reminder_txt
+                ).format(ci, fcast_input.response)
+                for ci, fcast_input in zip(CONFIDENCE_INTERVALS, fcast_inputs)
+            ], 
+            ordered=False
+        )
+
     content = content.copy()
     if current_user.meta['Context'] != 'neither':
         content['use_context'] = True
         content_ = content['context']
     else:
-        content['use_context'] = False
+        content['use_content'] = False
         content_ = content['no_context']
     if current_user.meta['Bootstrap']:
         additional_questions = [
             Textarea(
                 '''
-                <p>Imagine your first estimate was off the mark. Write at least one reason why that could be. Which assumptions or considerations could have been wrong?</p>
-                '''.format(fcast_input.response),
+                <p>Imagine your first estimates were off the mark. Write at least one reason why that could be. Which assumptions or considerations could have been wrong?</p>
+                ''',
                 var='Assumptions', required=True, validate=V.min_words(7)
             ),
-            Binary(
+            Check(
                 '''
-                <p>What does this reason imply? Was your first estimate too high or too low?</p>
+                <p>What does this reason imply? Were your first estimate too high or too low?</p>
                 ''',
-                ['Too high', 'Too low'],
-                var='TooHigh', validate=V.require()
+                [
+                    ('Too high', 'high'), 
+                    ('Too low', 'low'),
+                    ('Some were too high, others too low', 'both')
+                ],
+                var='Direction', validate=V.require()
             ),
             Label(
                 '''
-                Based on this new perspective, make a second estimate which is different from the first.
+                Based on this new perspective, make second estimates which are different from your first estimates.
                 '''
             )
         ]
@@ -131,7 +160,7 @@ def make_second_estimate_page(content, fcast_input):
         additional_questions = [
             Label(
                 '''
-                Please make a second estimate which is different from the first.
+                Please make second estimates which are different from your first estimates.
                 '''
             )
         ]
@@ -139,14 +168,10 @@ def make_second_estimate_page(content, fcast_input):
         Dashboard(src='/dashapp/', g=content),
         Label(
             '''
-            Your first estimate was {}.
-            '''.format(content_['remind'].format(fcast_input.response))
+            <p>Your first estimates were:</p>
+            ''' + make_reminder(content_['remind'])
         ),
         *additional_questions,
-        Input(
-            content_['question'],
-            var='SecondEstimate', append=content_['append'],
-            type='number', required=True
-        ),
+        *make_questions(content, first_estimate=False),
         timer='SecondEstimateTime'
     )
