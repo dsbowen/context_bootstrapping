@@ -74,14 +74,8 @@ def make_second_estimates_intro_page():
 def use_context(first_estimate):
     # indicates whether to include context
     return (
-        (
-            first_estimate 
-            and current_user.meta['Context'] == 'both'
-        )
-        or (
-            not first_estimate 
-            and current_user.meta['Context'] != 'neither'
-        )
+        (first_estimate and current_user.meta['Context'] == 'both')
+        or (not first_estimate and current_user.meta['Context'] != 'neither')
     )
 
 def make_fcast_questions():
@@ -137,27 +131,24 @@ def make_second_estimate_page(content, fcast_inputs):
     return Page(
         Dashboard(src='/dashapp/', g=content),
         # remind user of first estimates
-        make_reminder(content_['remind'], fcast_inputs),
+        Label(
+            '''
+            <p>Your first estimates were:</p>
+            ''' + html_list(
+                *[
+                    (
+                        'There is a {} in 100 chance '+content_['remind']
+                    ).format(pctile, fcast_input.response)
+                    for pctile, fcast_input in zip(PERCENTILES, fcast_inputs)
+                ], 
+                ordered=False
+            )
+        ),
         # additional questions (i.e., for dialectical bootstrapping)
         *make_additional_questions(),
         # estimation questions
         *make_questions(content, first_estimate=False),
         timer='SecondEstimateTime'
-    )
-
-def make_reminder(reminder_txt, fcast_inputs):
-    return Label(
-        '''
-        <p>Your first estimates were:</p>
-        ''' + html_list(
-            *[
-                (
-                    'There is a {} in 100 chance '+reminder_txt
-                ).format(pctile, fcast_input.response)
-                for pctile, fcast_input in zip(PERCENTILES, fcast_inputs)
-            ], 
-            ordered=False
-        )
     )
 
 def make_additional_questions():
