@@ -1,10 +1,12 @@
+# TODO add forecast questions
+
 forecast_questions = [
     dict(
         name='COVID_cases',
         file_name='covid_cases.csv',
         title='Daily new COVID-19 cases in the U.S.',
         context=dict(
-            question=('<p>There is a {} in 100 chance that there will be fewer than ', ' new COVID-19 cases reported in the U.S. in 5 days</p>'),
+            question=('<p>There is a {} in 100 chance that there will be fewer than ', ' thousand new COVID-19 cases reported in the U.S. in 5 days</p>'),
             append='thousand new cases',
             remind='that there will be {} thousand new COVID-19 cases reported in the U.S. in 5 days',
             x='Date',
