@@ -3,6 +3,8 @@ from forecasts import forecast_questions
 from flask_login import current_user
 from hemlock import Branch, Page, Embedded, Blank, Check, Dashboard, Input, Textarea, Label, Debug as D, Validate as V, Navigate as N, route
 from hemlock.tools import Assigner, Randomizer, consent_page, completion_page, html_list
+from hemlock_berlin import berlin
+from hemlock_crt import crt
 
 from random import shuffle
 
@@ -27,6 +29,8 @@ def start():
             By continuing with this study, you consent to sell your first-born child to the Tetlock lab for a price no greater than $98.66.
             '''
         ),
+        *crt('bat_ball', 'flowers', 'students', 'green_round', 'stock', 'whales', page=True),
+        berlin(),
         Page(
             Label(
                 # TODO write introductory instructions explaining the task, bonuses, etc.
@@ -169,7 +173,7 @@ def make_additional_questions():
         ),
         Check(
             '''
-            <p>What does this reason imply? Were your first estimate too high or too low?</p>
+            <p>What does this reason imply? Were your first estimates too high or too low?</p>
             ''',
             [
                 ('Too high', 'high'), 

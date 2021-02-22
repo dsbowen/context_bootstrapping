@@ -1,7 +1,10 @@
 cython
-dash==1.19.0
 dash-bootstrap-components==0.11.1
+dash==1.19.0
 gunicorn>=20.0.4
+hemlock-berlin==0.0.2
+hemlock-crt==0.0.2
 hemlock-survey>=0.0.45
 psycopg2>=2.8.4
+selenium-tools==0.0.2
 setuptools
