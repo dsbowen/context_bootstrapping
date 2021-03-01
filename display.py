@@ -7,6 +7,13 @@ import pandas as pd
 import plotly.express as px
 from dash.dependencies import Input, Output
 from hemlock import Dashboard
+try:
+    from yaml import load, CLoader as Loader
+except:
+    from yaml import load, Loader
+
+# load forecast questions
+forecast_questions = load(open('forecasts.yaml', 'r'), Loader=Loader)
 
 def make_dashboard(app=None):
     if app is not None:
@@ -27,27 +34,46 @@ def make_dashboard(app=None):
         ], id='graph-container')
     ], className='container')
 
+    def make_graphs(key):
+        from survey import TIME_STEPS
+
+        def make_graph(df, title, labels):
+            return dcc.Graph(
+                id='graph',
+                figure=px.line(
+                    df, x='Time', y='y', title=title, labels=labels
+                )
+            )
+
+        content = forecast_questions[key]
+        df = pd.read_csv(content['filename']).iloc[:-TIME_STEPS]
+        df_no_context = df.copy()
+        df_no_context['Time'] = list(range(len(df)))
+        return {
+            False: make_graph(
+                df_no_context,
+                title='Untitled graph', 
+                labels={'Time': 'Time', 'y': 'Units'}
+            ),
+            True: make_graph(
+                df,
+                title=content['title'],
+                labels={'Time': content['x'], 'y': content['y']}
+            )
+        }
+
+    graphs = {key: make_graphs(key) for key in forecast_questions.keys()}
+
     @dash_app.callback(
         Output('graph-container', 'children'),
         [Input('url', 'search')]
     )
     def load_graph(search):
-        content = Dashboard.get(search).g
-        df = pd.read_csv(content['file_name'])
-        if not content['use_context']:
-            df['Time'] = np.arange(1, len(df)+1)
-            title = 'Unitited graph'
-            content_ = content['no_context']
-        else:
-            title = content['title']
-            content_ = content['context']
-        columns = {'Time': content_['x'], 'y': content_['y']}
-        df = df.rename(columns=columns)
-        return [dcc.Graph(
-            id='graph', 
-            figure=px.line(
-                df, x=columns['Time'], y=columns['y'], title=title)
-        )]
+        if app is None:
+            print('WARNING: No dashboard located')
+            return [graphs['COVID_cases'][True]]
+        g = Dashboard.get(search).g
+        return [graphs[g['fcast_key']][g['context']]]
 
     return dash_app
 

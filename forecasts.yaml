@@ -1,0 +1,72 @@
+COVID_cases:
+  filename: covid_cases.csv
+  title: Daily new COVID-19 cases in the U.S.
+  x: Date
+  y: New daily cases (thousands)
+  x_text: days
+  y_text: thousand new COVID-19 cases in the U.S.
+  fewer_less: fewer
+  append: thousand new daily cases
+Tsunamis:
+  filename: tsunamis.csv
+  title: Tsunamis
+  x: Year
+  y: Tsunamis
+  x_text: years
+  fewer_less: fewer
+Bitcoin:
+  filename: bitcoin.csv
+  title: Bitcoin price
+  x: Date
+  y: U.S. Dollars (hundreds)
+  x_text: days
+  y_text: hundred U.S. dollars
+  quantity: the price of bicoin
+  fewer_less: less
+  append: hundred U.S. dollars
+SongTempo:
+  filename: song_tempo.csv
+  title: Average tempo of newly-released songs
+  x: Year
+  y: Beats per minute
+  x_text: years
+  quantity: the average tempo of newly released songs
+  fewer_less: less
+ClimateChange:
+  filename: climate_change.csv
+  title: Worldwide Google searches for "Climate change"
+  x: Month
+  y: Google searches
+  x_text: months
+  y_text: Google searches
+  fewer_less: fewer
+PoliceShootings:
+  filename: police_shootings.csv
+  title: Fatal police shootings in the U.S.
+  x: Month
+  y: Fatal police shootings
+  x_text: months
+  fewer_less: fewer
+Meteors:
+  filename: meteor_falls.csv
+  title: Recorded meteor falls
+  x: Year
+  y: Meteor falls
+  x_text: years
+  fewer_less: fewer
+TrumpTweets:
+  filename: trump_tweets.csv
+  title: Number of tweets from @RealDonaldTrump
+  x: Month
+  y: Tweets
+  x_text: months
+  y_text: tweets from @RealDonaldTrump
+  fewer_less: fewer
+VaccineSearches:
+  filename: vaccine_google_searches.csv
+  title: Worldwide Google searches for "Vaccine"
+  x: Month
+  y: Google searches
+  x_text: months
+  y_text: Google searches
+  fewer_less: fewer
