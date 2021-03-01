@@ -8,3 +8,4 @@ hemlock-survey>=0.0.45
 psycopg2>=2.8.4
 selenium-tools==0.0.2
 setuptools
+pyyaml>=5.3.1
