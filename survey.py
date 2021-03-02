@@ -1,13 +1,14 @@
 from flask_login import current_user
 from hemlock import (
     Branch, Page, Embedded, Blank, Check, Dashboard, Input, Textarea, 
-    Label, Debug as D, Validate as V, Navigate as N, route
+    Label, Debug as D, Validate as V, Navigate as N, likert, route
 )
 from hemlock.tools import (
-    Assigner, Randomizer, consent_page, completion_page, html_list
+    Assigner, Randomizer, consent_page, completion_page, html_list, progress
 )
 from hemlock_berlin import berlin
 from hemlock_crt import crt
+from hemlock_demographics import basic_demographics
 try:
     from yaml import load, CLoader as Loader
 except:
@@ -18,7 +19,7 @@ from random import shuffle
 # percentiles of the distribution predicted by the participant
 PERCENTILES = (10, 50, 90)
 # number of time-series forecasts made by each participant
-N_FCASTS = 2
+N_FCASTS = 6
 # number of forecasted time steps ahead
 TIME_STEPS = 5
 
@@ -50,6 +51,30 @@ fcast_selector = Randomizer(list(forecast_questions.keys()), r=N_FCASTS)
 
 @route('/survey')
 def start():
+    def make_instructions_page():
+        page = Page(
+            Label(
+                '''
+                <p>We will now show you graphs based on a wide variety of data and ask you to make estimates about them.</p> 
+                
+                <p>All the graphs are about something changing over time. For example, we might show you a graph of how the temperature in New York changed between January and July 2020.</p>
+
+                <p>Your task is to predict what will happen after the graph stops. For example, we might ask you to use the temperature graph to predict what the temperature in New York will be in December 2020.</p>
+
+                <p>Because we're interested in how your thinking does or doesn't change over time, we'll ask you to make two estimates for each graph.</p>
+
+                We will pay you a larger bonus if your estimates are more accurate. Please do not look up the answers.
+                '''
+            )
+        )
+        if current_user.meta['Context'] != 'both':
+            page.questions.append(Label(
+                '''
+                As an additional challenge, we're not going to tell you what you're estimating. Instead, we'll show you an "Untitled Graph". We're interested in how well you can predict the data without knowing where the data came from.
+                '''
+            ))
+        return page
+
     def make_first_estimate_questions():
         # returns a list of (forecast key, questions) tuples asking participants to enter forecasts
         fcast_keys = fcast_selector.next()
@@ -70,47 +95,40 @@ def start():
     context = use_context(first_estimate=True)
     first_estimate_questions = make_first_estimate_questions()
     return Branch(
-        consent_page(
-            # TODO write consent form
-            '''
-            By continuing with this study, you consent to sell your first-born child to the Tetlock lab for a price no greater than $98.66.
-            '''
-        ),
-        *crt(
-            'bat_ball', 
-            'flowers', 
-            'students', 
-            'green_round', 
-            'stock', 
-            'whales', 
-            page=True
-        ),
-        berlin(),
-        Page(
-            Label(
-                '''
-                <p>We will now show you some graphs and ask you to make estimates about them.</p> 
-                
-                <p>All the graphs are about something changing over time. For example, we might show you a graph of how the temperature in New York changed between January and July 2020.</p>
-
-                <p>Your task is to predict what will happen after the graph stops. For example, we might ask you to use the temperature graph to predict what the temperature in New York will be in December 2020.</p>
-
-                <p>We may or may not tell you what you're estimating. For example, we may show you a graph of New York temperatures but remove the labels and simply call it an "Untitled Graph".
-
-                We will pay you a larger bonus if your estimates are more accurate. Please do not look up the answers.
-                '''
-            )
-        ),
+        # consent_page(
+        #     # TODO write consent form
+        #     '''
+        #     By continuing with this study, you consent to sell your first-born child to the Tetlock lab for a price no greater than $98.66.
+        #     '''
+        # ),
+        # basic_demographics(page=True),
+        # *crt(
+        #     'bat_ball', 
+        #     'flowers', 
+        #     'students', 
+        #     'green_round', 
+        #     'stock', 
+        #     'whales', 
+        #     page=True
+        # ),
+        # berlin(),
+        make_instructions_page(),
         *[
             Page(
+                Label(
+                    progress(
+                        width=i/float(N_FCASTS), 
+                        text='Estimate {} of {}'.format(i+1, N_FCASTS)
+                    )
+                ),
                 Dashboard(
                     src='/dashapp/', 
-                    g={'fcast_key': fcast_key, 'context': context}
+                    g={'fcast_key': key, 'context': context}
                 ),
                 *questions,
                 timer='FirstEstimateTime'
             ) 
-            for fcast_key, questions in first_estimate_questions
+            for i, (key, questions) in enumerate(first_estimate_questions)
         ],
         navigate=N.second_estimates(first_estimate_questions)
     )
@@ -196,12 +214,18 @@ def second_estimates(first_estimate_branch, first_estimate_questions):
             ))
         return page
 
-    def make_second_estimate_page(key, questions):
+    def make_second_estimate_page(i, key, questions):
         # key is a key in the forecasts.yaml dictionary
         # questions is a list of first estimate questions for this key
         # returns a page asking for second estimates
         labels = make_fcast_question_labels(key, context)
         return Page(
+            Label(
+                progress(
+                    width=i/float(N_FCASTS),
+                    text='Estimate {} of {}'.format(i+1, N_FCASTS)
+                )
+            ),
             Dashboard(
                 src='/dashapp/', 
                 g={'fcast_key': key, 'context': context}
@@ -263,8 +287,26 @@ def second_estimates(first_estimate_branch, first_estimate_questions):
     return Branch(
         make_second_estimates_intro_page(),
         *[
-            make_second_estimate_page(key, questions)
-            for key, questions in first_estimate_questions
+            make_second_estimate_page(i, key, questions)
+            for i, (key, questions) in enumerate(first_estimate_questions)
         ],
+        Page(
+            *[
+                likert(
+                    '''
+                    <p>Compared to the average person, how much do you know about {}?</p><br/>
+                    '''.format(forecast_questions[key]['know_about']),
+                    [
+                        'Much less than average',
+                        'Less than average',
+                        'About average',
+                        'More than average',
+                        'Much more than average'
+                    ],
+                    var='ContextKnowledge'
+                )
+                for key, _ in first_estimate_questions
+            ]
+        ),
         completion_page()
     )

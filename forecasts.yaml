@@ -7,6 +7,7 @@ COVID_cases:
   y_text: thousand new COVID-19 cases in the U.S.
   fewer_less: fewer
   append: thousand new daily cases
+  know_about: COVID-19 case trends in the U.S.
 Tsunamis:
   filename: tsunamis.csv
   title: Tsunamis
@@ -14,6 +15,7 @@ Tsunamis:
   y: Tsunamis
   x_text: years
   fewer_less: fewer
+  know_about: tsunamis
 Bitcoin:
   filename: bitcoin.csv
   title: Bitcoin price
@@ -21,9 +23,10 @@ Bitcoin:
   y: U.S. Dollars (hundreds)
   x_text: days
   y_text: hundred U.S. dollars
-  quantity: the price of bicoin
+  quantity: the price of bitcoin
   fewer_less: less
   append: hundred U.S. dollars
+  know_about: bitcoin
 SongTempo:
   filename: song_tempo.csv
   title: Average tempo of newly-released songs
@@ -32,14 +35,17 @@ SongTempo:
   x_text: years
   quantity: the average tempo of newly released songs
   fewer_less: less
+  know_about: recent trends in music
 ClimateChange:
   filename: climate_change.csv
-  title: Worldwide Google searches for "Climate change"
+  title: Google search trends for "Climate change"
   x: Month
-  y: Google searches
+  y: Google search popularity
   x_text: months
-  y_text: Google searches
-  fewer_less: fewer
+  y_text: ""
+  quantity: '"climate change\"''s Google search popularity score'
+  fewer_less: less
+  know_about: public interest in climate change
 PoliceShootings:
   filename: police_shootings.csv
   title: Fatal police shootings in the U.S.
@@ -47,6 +53,7 @@ PoliceShootings:
   y: Fatal police shootings
   x_text: months
   fewer_less: fewer
+  know_about: police shootings
 Meteors:
   filename: meteor_falls.csv
   title: Recorded meteor falls
@@ -54,6 +61,7 @@ Meteors:
   y: Meteor falls
   x_text: years
   fewer_less: fewer
+  know_about: meteors
 TrumpTweets:
   filename: trump_tweets.csv
   title: Number of tweets from @RealDonaldTrump
@@ -62,11 +70,14 @@ TrumpTweets:
   x_text: months
   y_text: tweets from @RealDonaldTrump
   fewer_less: fewer
+  know_about: Donald Trump's twitter
 VaccineSearches:
   filename: vaccine_google_searches.csv
-  title: Worldwide Google searches for "Vaccine"
+  title: Google search trends for "Vaccine"
   x: Month
-  y: Google searches
+  y: Google search popularity
   x_text: months
-  y_text: Google searches
-  fewer_less: fewer
+  y_text: ""
+  quantity: '"vaccine"''s Google search popularity score'
+  fewer_less: less
+  know_about: public interest in vaccines

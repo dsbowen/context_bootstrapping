@@ -12,6 +12,9 @@ try:
 except:
     from yaml import load, Loader
 
+# number of time steps to display
+DISPLAY_TIME_STEPS = 60
+
 # load forecast questions
 forecast_questions = load(open('forecasts.yaml', 'r'), Loader=Loader)
 
@@ -46,7 +49,8 @@ def make_dashboard(app=None):
             )
 
         content = forecast_questions[key]
-        df = pd.read_csv(content['filename']).iloc[:-TIME_STEPS]
+        df = pd.read_csv(content['filename'])
+        df = df.iloc[-DISPLAY_TIME_STEPS-TIME_STEPS:-TIME_STEPS]
         df_no_context = df.copy()
         df_no_context['Time'] = list(range(len(df)))
         return {

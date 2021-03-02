@@ -3,7 +3,8 @@ dash-bootstrap-components==0.11.1
 dash==1.19.0
 hemlock-berlin==0.0.2
 hemlock-crt==0.0.2
-hemlock-survey>=0.0.45
+hemlock-demographics==0.0.7
+hemlock-survey==0.0.49
 ipykernel>=5.3.4
 pip
 pyyaml>=5.3.1
