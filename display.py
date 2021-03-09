@@ -50,7 +50,8 @@ def make_dashboard(app=None):
 
         content = forecast_questions[key]
         df = pd.read_csv(content['filename'])
-        df = df.iloc[-DISPLAY_TIME_STEPS-TIME_STEPS:-TIME_STEPS]
+        df = df.iloc[-DISPLAY_TIME_STEPS-TIME_STEPS:]
+        df['y'].iloc[-TIME_STEPS:] = None
         df_no_context = df.copy()
         df_no_context['Time'] = list(range(len(df)))
         return {

@@ -1,5 +1,5 @@
 COVID_cases:
-  filename: covid_cases.csv
+  filename: data/covid_cases.csv
   title: Daily new COVID-19 cases in the U.S.
   x: Date
   y: New daily cases (thousands)
@@ -9,7 +9,7 @@ COVID_cases:
   append: thousand new daily cases
   know_about: COVID-19 case trends in the U.S.
 Tsunamis:
-  filename: tsunamis.csv
+  filename: data/tsunamis.csv
   title: Tsunamis
   x: Year
   y: Tsunamis
@@ -17,7 +17,7 @@ Tsunamis:
   fewer_less: fewer
   know_about: tsunamis
 Bitcoin:
-  filename: bitcoin.csv
+  filename: data/bitcoin.csv
   title: Bitcoin price
   x: Date
   y: U.S. Dollars (hundreds)
@@ -28,7 +28,7 @@ Bitcoin:
   append: hundred U.S. dollars
   know_about: bitcoin
 SongTempo:
-  filename: song_tempo.csv
+  filename: data/song_tempo.csv
   title: Average tempo of newly-released songs
   x: Year
   y: Beats per minute
@@ -37,17 +37,17 @@ SongTempo:
   fewer_less: less
   know_about: recent trends in music
 ClimateChange:
-  filename: climate_change.csv
+  filename: data/climate_change.csv
   title: Google search trends for "Climate change"
   x: Month
   y: Google search popularity
   x_text: months
   y_text: ""
-  quantity: '"climate change\"''s Google search popularity score'
+  quantity: '"climate change"''s Google search popularity score'
   fewer_less: less
   know_about: public interest in climate change
 PoliceShootings:
-  filename: police_shootings.csv
+  filename: data/police_shootings.csv
   title: Fatal police shootings in the U.S.
   x: Month
   y: Fatal police shootings
@@ -55,7 +55,7 @@ PoliceShootings:
   fewer_less: fewer
   know_about: police shootings
 Meteors:
-  filename: meteor_falls.csv
+  filename: data/meteor_falls.csv
   title: Recorded meteor falls
   x: Year
   y: Meteor falls
@@ -63,7 +63,7 @@ Meteors:
   fewer_less: fewer
   know_about: meteors
 TrumpTweets:
-  filename: trump_tweets.csv
+  filename: data/trump_tweets.csv
   title: Number of tweets from @RealDonaldTrump
   x: Month
   y: Tweets
@@ -72,7 +72,7 @@ TrumpTweets:
   fewer_less: fewer
   know_about: Donald Trump's twitter
 VaccineSearches:
-  filename: vaccine_google_searches.csv
+  filename: data/vaccine_google_searches.csv
   title: Google search trends for "Vaccine"
   x: Month
   y: Google search popularity

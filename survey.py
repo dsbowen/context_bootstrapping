@@ -1,10 +1,10 @@
 from flask_login import current_user
 from hemlock import (
     Branch, Page, Embedded, Blank, Check, Dashboard, Input, Textarea, 
-    Label, Debug as D, Validate as V, Navigate as N, likert, route
+    Label, Debug as D, Validate as V, Navigate as N, binary, likert, route
 )
 from hemlock.tools import (
-    Assigner, Randomizer, consent_page, completion_page, html_list, progress
+    Assigner, Randomizer, consent_page, completion_page, make_list, progress
 )
 from hemlock_berlin import berlin
 from hemlock_crt import crt
@@ -19,7 +19,7 @@ from random import shuffle
 # percentiles of the distribution predicted by the participant
 PERCENTILES = (10, 50, 90)
 # number of time-series forecasts made by each participant
-N_FCASTS = 6
+N_FCASTS = 2
 # number of forecasted time steps ahead
 TIME_STEPS = 5
 
@@ -31,63 +31,82 @@ TIME_STEPS = 5
 # x=days
 # output: "There is a 50 in 100 chance that there will be fewer than _____ thousand new daily COVID-19 cases in the U.S. 5 days after the end of this graph."
 CONTEXT = (
-    '<p>There is a {pctile} in 100 chance that {quantity} will be {fewer_less} than ', ' {y} {t} {x} after the end of this graph.</p>'
+    'There is a {pctile} in 100 chance that {quantity} will be {fewer_less} than ', ' {y} {t} {x} after the line stops.'
 )
 # output: "There is a 50 in 100 chance that the line will be below _____ 5 time steps after the end of this graph."
 NO_CONTEXT = (
-    '<p>There is a {pctile} in 100 chance that the line will be below ', ' {t} time steps after the end of this graph.'
+    'There is a {pctile} in 100 chance that the line will be below ', ' {t} time steps after the line stops.'
 )
 
 # 2 (dialectical bootstrapping or no dialectical bootstrapping)
-# x 3 (context for both estimates, neither estimate, or second only)
+# x 2 (context for both estimates or neither estimate)
 assigner = Assigner({
     'Bootstrap': (0, 1),
-    'Context': ('both', 'neither', 'second-only')
+    'Context': ('both', 'neither',)
 })
 # load forecast questions
 forecast_questions = load(open('forecasts.yaml', 'r'), Loader=Loader)
 # randomly selects keys for the forecast questions
 fcast_selector = Randomizer(list(forecast_questions.keys()), r=N_FCASTS)
 
-@route('/survey')
+# @route('/survey')
 def start():
-    def make_instructions_page():
-        page = Page(
-            Label(
-                '''
-                <p>We will now show you graphs based on a wide variety of data and ask you to make estimates about them.</p> 
-                
-                <p>All the graphs are about something changing over time. For example, we might show you a graph of how the temperature in New York changed between January and July 2020.</p>
+    """
+    :return: branch with consent form and preliminary questions
+    :rtype: hemlock.Branch
+    """
+    return Branch(
+        consent_page(open('texts/consent.md', 'r').read()),
+        basic_demographics(page=True),
+        *crt(
+            'bat_ball', 
+            'flowers', 
+            'students', 
+            'green_round', 
+            'stock', 
+            'whales', 
+            page=True
+        ),
+        berlin(),
+        navigate=first_estimates_branch
+    )
 
-                <p>Your task is to predict what will happen after the graph stops. For example, we might ask you to use the temperature graph to predict what the temperature in New York will be in December 2020.</p>
-
-                <p>Because we're interested in how your thinking does or doesn't change over time, we'll ask you to make two estimates for each graph.</p>
-
-                We will pay you a larger bonus if your estimates are more accurate. Please do not look up the answers.
-                '''
-            )
-        )
+@route('/survey')
+def first_estimates_branch(start_branch=None):
+    """
+    :param start_branch: 
+    :type start_branch: hemlock.Branch
+    :return: branch with first estimate questions
+    :rtype: hemlock.Branch
+    """
+    def make_instructions_labels():
+        """
+        :return: first estimate instructions labels
+        :rtype: list of hemlock.Label
+        """
+        labels = [Label(
+            open('texts/first_estimate.md', 'r').read())
+        ]
         if current_user.meta['Context'] != 'both':
-            page.questions.append(Label(
-                '''
-                As an additional challenge, we're not going to tell you what you're estimating. Instead, we'll show you an "Untitled Graph". We're interested in how well you can predict the data without knowing where the data came from.
-                '''
+            labels.append(Label(
+                open('texts/first_estimate_nocontext.md', 'r').read()
             ))
-        return page
+        return labels
 
     def make_first_estimate_questions():
-        # returns a list of (forecast key, questions) tuples asking participants to enter forecasts
+        """
+        :return: first estimate questions
+        :rtype: list of hemlock.Blank
+        """
         fcast_keys = fcast_selector.next()
         fcast_keys = (
             list(fcast_keys) if isinstance(fcast_keys, tuple) 
             else [fcast_keys]
         )
-        # shuffle the order of the questions
         shuffle(fcast_keys)
-        # track the order of the questions as embedded data
         current_user.embedded.append(Embedded('Forecast', fcast_keys))
         return [
-            [key, make_fcast_questions(key, context, first_estimate=True)] 
+            (key, make_fcast_questions(key, context, first_estimate=True))
             for key in fcast_keys
         ]
 
@@ -95,32 +114,12 @@ def start():
     context = use_context(first_estimate=True)
     first_estimate_questions = make_first_estimate_questions()
     return Branch(
-        # consent_page(
-        #     # TODO write consent form
-        #     '''
-        #     By continuing with this study, you consent to sell your first-born child to the Tetlock lab for a price no greater than $98.66.
-        #     '''
-        # ),
-        # basic_demographics(page=True),
-        # *crt(
-        #     'bat_ball', 
-        #     'flowers', 
-        #     'students', 
-        #     'green_round', 
-        #     'stock', 
-        #     'whales', 
-        #     page=True
-        # ),
-        # berlin(),
-        make_instructions_page(),
+        Page(*make_instructions_labels()),
         *[
             Page(
-                Label(
-                    progress(
-                        width=i/float(N_FCASTS), 
-                        text='Estimate {} of {}'.format(i+1, N_FCASTS)
-                    )
-                ),
+                Label(progress(
+                    i/N_FCASTS, 'Estimate {} of {}'.format(i+1, N_FCASTS)
+                )),
                 Dashboard(
                     src='/dashapp/', 
                     g={'fcast_key': key, 'context': context}
@@ -130,24 +129,36 @@ def start():
             ) 
             for i, (key, questions) in enumerate(first_estimate_questions)
         ],
-        navigate=N.second_estimates(first_estimate_questions)
+        navigate=N.second_estimates_branch(first_estimate_questions)
     )
 
 def use_context(first_estimate):
-    # indicates whether to include context
+    """
+    :param first_estimate: indicates whether this is a first estimate (vs second)
+    :type first_estimate: bool
+    :return: indicates whether to include context
+    :rtype: bool
+    """
     return (
         (first_estimate and current_user.meta['Context'] == 'both')
         or (not first_estimate and current_user.meta['Context'] != 'neither')
     )
 
 def make_fcast_questions(key, context, first_estimate):
-    # key is a key from forecasts.yaml, e.g., COVID_cases
-    # context is a boolean indicating to use context
-    # returns a list of forecast questions
+    """Creates forecast questions
+
+    :param key: name of a time-series process
+    :type key: str
+    :param context: indicates to include context
+    :type context: bool
+    :param first_estimate: indicates that this is a first estimate
+    :type first_estimate: bool
+    :return: estimate questions
+    :rtype: list of hemlock.Blank
+    """
     labels = make_fcast_question_labels(key, context)
     content = forecast_questions[key].copy() # dictionary of question content
     append = get_content_item(content, 'append', 'y') if context else None
-    # variable is 'FirstEstimate' or 'SecondEstimate'
     var = 'FirstEstimate' if first_estimate else 'SecondEstimate'
     return [
         Blank(
@@ -159,9 +170,23 @@ def make_fcast_questions(key, context, first_estimate):
     ]
 
 def make_fcast_question_labels(key, context):
+    """Create forecast question labels
+
+    :param key: name of a time-series
+    :type key: str
+    :param context: indicates to include context
+    :type context: bool
+    :return: forecast question labels
+    :rtype: list of tuple
+    """
     def make_question_label(pctile):
+        """
+        :param pctile: percentile of the distribution being estimated
+        :type pctile: scalar
+        :return: estimate question label
+        :rtype: tuple of (str, str)
+        """
         if context:
-            # forecast question label with context
             return (
                 CONTEXT[0].format(
                     pctile=pctile, 
@@ -171,7 +196,6 @@ def make_fcast_question_labels(key, context):
                 CONTEXT[1].format(y=y, t=TIME_STEPS, x=x)
             )
         else:
-            # forecast question label without context
             return (
                 NO_CONTEXT[0].format(pctile=pctile),
                 NO_CONTEXT[1].format(t=TIME_STEPS)
@@ -189,6 +213,17 @@ def make_fcast_question_labels(key, context):
     return [make_question_label(pctile) for pctile in PERCENTILES]
 
 def get_content_item(content, key, substitute):
+    """Get an item from a question content dictionary
+
+    :param content: time-series content (e.g. name of x and y variables)
+    :type content: dict
+    :param key: name of a time-series
+    :type key: str
+    :param substitute: substitute for the key if key is not in content
+    :type substitute: str
+    :return: item
+    :rtype: str
+    """
     item = content.get(key)
     if item is None:
         item = content[substitute]
@@ -196,51 +231,60 @@ def get_content_item(content, key, substitute):
     return item
 
 @N.register
-def second_estimates(first_estimate_branch, first_estimate_questions):
-    def make_second_estimates_intro_page():
-        page = Page(
-            Label(
-                '''
-                We will now ask you to make new estimates for all of the questions you just answered. Your second estimate should be different from your first.
-                '''
-            )
-        )
+def second_estimates_branch(first_estimate_branch, first_estimate_questions):
+    """Create branch for second estimates
+
+    :param first_estimate_branch: branch for first estimates
+    :type first_estimate_branch: hemlock.Branch
+    :param first_estimate_questions: questions containing participant's first estimates
+    :type first_estimate_questions: list of (time-series key, question) tuples
+    :return: second estimates branch
+    :rtype: hemlock.Branch
+    """
+    def make_instructions_labels():
+        """
+        :return: instructions labels for second estimates
+        :rtype: list of hemlock.Label
+        """
+        labels = [Label(open('texts/second_estimate.md', 'r').read())]
         if current_user.meta['Context'] == 'second-only':
-            page.questions.append(Label(
-                # TODO it might be confusing for people who made their estimates without context the first time to now make their estimates with context. 'I never estimated anything about COVID-19 deaths, what do you mean my first estimate?' Maybe add something explaining this to them. 
-                '''
-                When making your second estimates, we'll tell you what you're estimating.
-                '''
-            ))
-        return page
+            labels.append(Label(open('texts/second_estimate_addcontext.md')))
+        return labels
 
     def make_second_estimate_page(i, key, questions):
-        # key is a key in the forecasts.yaml dictionary
-        # questions is a list of first estimate questions for this key
-        # returns a page asking for second estimates
+        """
+        :param i: estimate number
+        :type i: int
+        :param key: name of time-series
+        :type key: str
+        :param questions: corresponding first estimate questions
+        :type questions: list of hemlock.Blank
+        :return: page asking for second estimates
+        :rtype: hemlock.Page
+        """
         labels = make_fcast_question_labels(key, context)
         return Page(
             Label(
                 progress(
-                    width=i/float(N_FCASTS),
-                    text='Estimate {} of {}'.format(i+1, N_FCASTS)
+                    i/float(N_FCASTS), 
+                    'Estimate {} of {}'.format(i+1, N_FCASTS)
                 )
             ),
             Dashboard(
                 src='/dashapp/', 
                 g={'fcast_key': key, 'context': context}
             ),
-            # remind user of first estimates
             Label(
                 '''
-                <p>Your first estimates were:</p>
-                ''' + html_list(
-                    *[
+                Your first estimates were:
+
+                {}
+                '''.format(make_list(
+                    [
                         label[0]+q.response+label[1] 
                         for label, q in zip(labels, questions)
-                    ], 
-                    ordered=False
-                )
+                    ]
+                ))
             ),
             # additional questions (i.e., for dialectical bootstrapping)
             *make_additional_questions(),
@@ -250,24 +294,28 @@ def second_estimates(first_estimate_branch, first_estimate_questions):
         )
 
     def make_additional_questions():
+        """Make additional questions, such as prompts for dialectical bootstrapping
+
+        :return: additional questions
+        :rtype: list of hemlock.Question
+        """
         if not current_user.meta['Bootstrap']:
             return [Label(
                 '''
                 Please make second estimates which are different from your first estimates.
                 '''
             )]
-        # questions for dialectical bootstrapping
         return [
             Textarea(
                 '''
-                <p>Imagine your first estimates were off the mark. Write at least one reason why that could be. Which assumptions or considerations could have been wrong?</p>
+                Imagine your first estimates were off the mark. Write at least one reason why that could be. Which assumptions or considerations could have been wrong?
                 ''',
                 var='Assumptions', required=True, validate=V.min_words(7),
                 debug=[D.send_keys('here are 7 words without a meaning'), D.send_keys(p_exec=.2)]
             ),
             Check(
                 '''
-                <p>What does this reason imply? Were your first estimates too high or too low?</p>
+                What does this reason imply? Were your first estimates too high or too low?
                 ''',
                 [
                     ('Too high', 'high'), 
@@ -285,7 +333,7 @@ def second_estimates(first_estimate_branch, first_estimate_questions):
 
     context = use_context(first_estimate=False)
     return Branch(
-        make_second_estimates_intro_page(),
+        Page(*make_instructions_labels()),
         *[
             make_second_estimate_page(i, key, questions)
             for i, (key, questions) in enumerate(first_estimate_questions)
@@ -294,7 +342,9 @@ def second_estimates(first_estimate_branch, first_estimate_questions):
             *[
                 likert(
                     '''
-                    <p>Compared to the average person, how much do you know about {}?</p><br/>
+                    Compared to the average person, how much do you know about {}?
+
+                    <br/>
                     '''.format(forecast_questions[key]['know_about']),
                     [
                         'Much less than average',
@@ -307,6 +357,19 @@ def second_estimates(first_estimate_branch, first_estimate_questions):
                 )
                 for key, _ in first_estimate_questions
             ]
+        ),
+        Page(
+            binary(
+                '''
+                Did you look up the answers to any of the questions we asked?
+
+                It's important that you answer honestly for research purposes. Your answer won't affect your bonus.
+                ''',
+                validate=V.require()
+            ),
+            Textarea(
+                'Do you have any suggestions for how to improve our study? Feedback is greatly appreciated!'
+            )
         ),
         completion_page()
     )
