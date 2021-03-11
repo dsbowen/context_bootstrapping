@@ -29,14 +29,25 @@ TIME_STEPS = 5
 # y=thousand new daily COVID-19 cases in the U.S., 
 # t=5
 # x=days
-# output: "There is a 50 in 100 chance that there will be fewer than _____ thousand new daily COVID-19 cases in the U.S. 5 days after the end of this graph."
+# output: "There is a 50 in 100 chance that there will be fewer than _____ thousand new daily COVID-19 cases in the U.S. 5 days after the line stops."
 CONTEXT = (
     'There is a {pctile} in 100 chance that {quantity} will be {fewer_less} than ', ' {y} {t} {x} after the line stops.'
 )
-# output: "There is a 50 in 100 chance that the line will be below _____ 5 time steps after the end of this graph."
+# output: "There is a 50 in 100 chance that the line will be below _____ 5 time steps after the line stops."
 NO_CONTEXT = (
     'There is a {pctile} in 100 chance that the line will be below ', ' {t} time steps after the line stops.'
 )
+# instructions labels
+INSTRUCTIONS = {
+    'first': {
+        'both': open('texts/first_estimate_context_instructions.md', 'r').read(),
+        'neither': open('texts/first_estimate_nocontext_instructions.md', 'r').read()
+    },
+    'second': {
+        'both': open('texts/second_estimate_context_instructions.md', 'r').read(),
+        'neither': open('texts/second_estimate_nocontext_instructions.md', 'r').read()
+    }
+}
 
 # 2 (dialectical bootstrapping or no dialectical bootstrapping)
 # x 2 (context for both estimates or neither estimate)
@@ -79,20 +90,6 @@ def first_estimates_branch(start_branch=None):
     :return: branch with first estimate questions
     :rtype: hemlock.Branch
     """
-    def make_instructions_labels():
-        """
-        :return: first estimate instructions labels
-        :rtype: list of hemlock.Label
-        """
-        labels = [Label(
-            open('texts/first_estimate.md', 'r').read())
-        ]
-        if current_user.meta['Context'] != 'both':
-            labels.append(Label(
-                open('texts/first_estimate_nocontext.md', 'r').read()
-            ))
-        return labels
-
     def make_first_estimate_questions():
         """
         :return: first estimate questions
@@ -114,12 +111,12 @@ def first_estimates_branch(start_branch=None):
     context = use_context(first_estimate=True)
     first_estimate_questions = make_first_estimate_questions()
     return Branch(
-        Page(*make_instructions_labels()),
+        Page(
+            Label(INSTRUCTIONS['first'][current_user.meta['Context']])
+        ),
         *[
             Page(
-                Label(progress(
-                    i/N_FCASTS, 'Estimate {} of {}'.format(i+1, N_FCASTS)
-                )),
+                Label(progress(i/N_FCASTS, f'Estimate {i+1} of {N_FCASTS}')),
                 Dashboard(
                     src='/dashapp/', 
                     g={'fcast_key': key, 'context': context}
@@ -264,27 +261,22 @@ def second_estimates_branch(first_estimate_branch, first_estimate_questions):
         """
         labels = make_fcast_question_labels(key, context)
         return Page(
-            Label(
-                progress(
-                    i/float(N_FCASTS), 
-                    'Estimate {} of {}'.format(i+1, N_FCASTS)
-                )
-            ),
+            Label(progress(i/N_FCASTS, f'Estimate {i+1} of {N_FCASTS}')),
             Dashboard(
                 src='/dashapp/', 
                 g={'fcast_key': key, 'context': context}
             ),
             Label(
-                '''
+                f'''
                 Your first estimates were:
 
-                {}
-                '''.format(make_list(
+                {make_list(
                     [
-                        label[0]+q.response+label[1] 
+                        label[0]+q.response+label[1]
                         for label, q in zip(labels, questions)
                     ]
-                ))
+                )}
+                '''
             ),
             # additional questions (i.e., for dialectical bootstrapping)
             *make_additional_questions(),
@@ -333,7 +325,9 @@ def second_estimates_branch(first_estimate_branch, first_estimate_questions):
 
     context = use_context(first_estimate=False)
     return Branch(
-        Page(*make_instructions_labels()),
+        Page(
+            Label(INSTRUCTIONS['second'][current_user.meta['Context']])
+        ),
         *[
             make_second_estimate_page(i, key, questions)
             for i, (key, questions) in enumerate(first_estimate_questions)
@@ -341,11 +335,7 @@ def second_estimates_branch(first_estimate_branch, first_estimate_questions):
         Page(
             *[
                 likert(
-                    '''
-                    Compared to the average person, how much do you know about {}?
-
-                    <br/>
-                    '''.format(forecast_questions[key]['know_about']),
+                    f'Compared to the average person, how much do you know about {forecast_questions[key]["know_about"]}?',
                     [
                         'Much less than average',
                         'Less than average',

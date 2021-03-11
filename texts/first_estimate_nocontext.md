@@ -1,3 +1,0 @@
-We will now show you graphs that display a variety of data-sets. And we will ask you to make estimates of what is likely to happen next.
-
-At this point in the experiment, we are asking you to make your estimates before you know anything about what the numbers represent. We will simply show you a series of "Untitled Graphs". Our goal is to assess how well people can make predictions purely from the patterns of numbers over time.
