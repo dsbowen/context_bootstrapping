@@ -18,6 +18,36 @@ DISPLAY_TIME_STEPS = .7
 # load forecast questions
 forecast_questions = load(open('forecasts.yaml', 'r'), Loader=Loader)
 
+def make_graphs(key):
+    def make_graph(df, title, labels):
+        return dcc.Graph(
+            id='graph',
+            figure=px.line(
+                df, x='Time', y='y', title=title, labels=labels
+            )
+        )
+
+    content = forecast_questions[key]
+    df = pd.read_csv(content['filename'])
+    # block out last time steps
+    df['y'].iloc[int(DISPLAY_TIME_STEPS*len(df)):] = None
+    df_no_context = df.copy()
+    df_no_context['Time'] = list(range(len(df)))
+    return {
+        False: make_graph(
+            df_no_context,
+            title='Untitled graph', 
+            labels={'Time': 'Time', 'y': 'Units'}
+        ),
+        True: make_graph(
+            df,
+            title=content['title'],
+            labels={'Time': content['x'], 'y': content['y']}
+        )
+    }
+
+graphs = {key: make_graphs(key) for key in forecast_questions.keys()}
+
 def make_dashboard(app=None):
     if app is not None:
         dash_app = dash.Dash(
@@ -37,46 +67,16 @@ def make_dashboard(app=None):
         ], id='graph-container')
     ], className='container')
 
-    def make_graphs(key):
-        def make_graph(df, title, labels):
-            return dcc.Graph(
-                id='graph',
-                figure=px.line(
-                    df, x='Time', y='y', title=title, labels=labels
-                )
-            )
-
-        content = forecast_questions[key]
-        df = pd.read_csv(content['filename'])
-        # block out last time steps
-        df['y'].iloc[int(DISPLAY_TIME_STEPS*len(df)):] = None
-        df_no_context = df.copy()
-        df_no_context['Time'] = list(range(len(df)))
-        return {
-            False: make_graph(
-                df_no_context,
-                title='Untitled graph', 
-                labels={'Time': 'Time', 'y': 'Units'}
-            ),
-            True: make_graph(
-                df,
-                title=content['title'],
-                labels={'Time': content['x'], 'y': content['y']}
-            )
-        }
-
-    graphs = {key: make_graphs(key) for key in forecast_questions.keys()}
-
-    @dash_app.callback(
-        Output('graph-container', 'children'),
-        [Input('url', 'search')]
-    )
-    def load_graph(search):
-        if app is None:
-            print('WARNING: No dashboard located')
-            return [graphs['COVID_cases'][True]]
-        g = Dashboard.get(search).g
-        return [graphs[g['fcast_key']][g['context']]]
+    # @dash_app.callback(
+    #     Output('graph-container', 'children'),
+    #     [Input('url', 'search')]
+    # )
+    # def load_graph(search):
+    #     if app is None:
+    #         print('WARNING: No dashboard located')
+    #         return [graphs['COVID_cases'][True]]
+    #     g = Dashboard.get(search).g
+    #     return [graphs[g['fcast_key']][g['context']]]
 
     return dash_app
 
