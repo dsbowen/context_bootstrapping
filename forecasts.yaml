@@ -4,7 +4,7 @@ COVID_cases:
   x: Date
   y: New daily cases (thousands)
   x_end: on January 28, 2021
-  x_end: January 1, 2021
+  x_end: on January 1, 2021
   x_text: days
   y_text: thousand new COVID-19 cases in regions of the U.S.
   fewer_less: fewer
