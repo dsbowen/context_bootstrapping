@@ -4,7 +4,7 @@ from hemlock import (
     Label, Debug as D, Validate as V, Navigate as N, binary, likert, route
 )
 from hemlock.tools import (
-    Assigner, Randomizer, consent_page, completion_page, make_list, progress
+    Assigner, Randomizer, attention_check, consent_page, completion_page, make_list, progress
 )
 from hemlock_berlin import berlin
 from hemlock_crt import crt
@@ -17,25 +17,23 @@ except:
 from random import shuffle
 
 # percentiles of the distribution predicted by the participant
-PERCENTILES = (10, 50, 90)
+PERCENTILES = (5, 50, 95)
 # number of time-series forecasts made by each participant
-N_FCASTS = 2
-# number of forecasted time steps ahead
-TIME_STEPS = 5
+N_FCASTS = 6
 
 # templates for the elicitation question with and without context, e.g.,
 # pctile=50, 
 # fewer_less=fewer, 
 # y=thousand new daily COVID-19 cases in the U.S., 
-# t=5
+# x_end=on January 1, 2021
 # x=days
-# output: "There is a 50 in 100 chance that there will be fewer than _____ thousand new daily COVID-19 cases in the U.S. 5 days after the line stops."
+# output: "There is a 50 in 100 chance that there will be fewer than _____ thousand new daily COVID-19 cases in the U.S. on January 1, 2021."
 CONTEXT = (
-    'There is a {pctile} in 100 chance that {quantity} will be {fewer_less} than ', ' {y} {t} {x} after the line stops.'
+    'There is a {pctile} in 100 chance that {quantity} will be {fewer_less} than ', ' {y} {x_end} (i.e., at the rightmost point on the graph).'
 )
 # output: "There is a 50 in 100 chance that the line will be below _____ 5 time steps after the line stops."
 NO_CONTEXT = (
-    'There is a {pctile} in 100 chance that the line will be below ', ' {t} time steps after the line stops.'
+    'There is a {pctile} in 100 chance that the line will be below ', ' at the rightmost point on the graph.'
 )
 # instructions labels
 INSTRUCTIONS = {
@@ -53,14 +51,14 @@ INSTRUCTIONS = {
 # x 2 (context for both estimates or neither estimate)
 assigner = Assigner({
     'Bootstrap': (0, 1),
-    'Context': ('both', 'neither',)
+    'Context': ('both', 'neither')
 })
 # load forecast questions
 forecast_questions = load(open('forecasts.yaml', 'r'), Loader=Loader)
 # randomly selects keys for the forecast questions
 fcast_selector = Randomizer(list(forecast_questions.keys()), r=N_FCASTS)
 
-# @route('/survey')
+@route('/survey')
 def start():
     """
     :return: branch with consent form and preliminary questions
@@ -68,6 +66,7 @@ def start():
     """
     return Branch(
         consent_page(open('texts/consent.md', 'r').read()),
+        Page(attention_check()),
         basic_demographics(page=True),
         *crt(
             'bat_ball', 
@@ -82,7 +81,7 @@ def start():
         navigate=first_estimates_branch
     )
 
-@route('/survey')
+# @route('/survey')
 def first_estimates_branch(start_branch=None):
     """
     :param start_branch: 
@@ -190,19 +189,17 @@ def make_fcast_question_labels(key, context):
                     fewer_less=fewer_less,
                     quantity=quantity
                 ),
-                CONTEXT[1].format(y=y, t=TIME_STEPS, x=x)
+                CONTEXT[1].format(y=y, x_end=x_end)
             )
         else:
-            return (
-                NO_CONTEXT[0].format(pctile=pctile),
-                NO_CONTEXT[1].format(t=TIME_STEPS)
-            )
+            return (NO_CONTEXT[0].format(pctile=pctile), NO_CONTEXT[1])
 
     content = forecast_questions[key].copy() # dictionary of question content
     # x variable text, e.g., 'days'
     x = get_content_item(content, 'x_text', 'x')
     # y variable text, e.g., 'thousand new COVID-19 cases in the U.S.'
     y = get_content_item(content, 'y_text', 'y')
+    x_end = content['x_end']
     # fewer or less
     fewer_less = content['fewer_less']
     # name of the quantity, or 'there' e.g., 'there will be...'
@@ -355,10 +352,12 @@ def second_estimates_branch(first_estimate_branch, first_estimate_questions):
 
                 It's important that you answer honestly for research purposes. Your answer won't affect your bonus.
                 ''',
+                var='LookUp', data_rows=-1,
                 validate=V.require()
             ),
             Textarea(
-                'Do you have any suggestions for how to improve our study? Feedback is greatly appreciated!'
+                'Do you have any suggestions for how to improve our study? Feedback is greatly appreciated!',
+                var='AdditionalComments', data_rows=-1
             )
         ),
         completion_page()

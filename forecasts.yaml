@@ -1,10 +1,12 @@
 COVID_cases:
   filename: data/covid_cases.csv
-  title: Daily new COVID-19 cases in the U.S.
+  title: Recent study of a representative sample of daily new COVID-19 cases in regions of the U.S.
   x: Date
   y: New daily cases (thousands)
+  x_end: on January 28, 2021
+  x_end: January 1, 2021
   x_text: days
-  y_text: thousand new COVID-19 cases in the U.S.
+  y_text: thousand new COVID-19 cases in regions of the U.S.
   fewer_less: fewer
   append: thousand new daily cases
   know_about: COVID-19 case trends in the U.S.
@@ -13,17 +15,19 @@ Tsunamis:
   title: Tsunamis
   x: Year
   y: Tsunamis
+  x_end: in 2020
   x_text: years
   fewer_less: fewer
   know_about: tsunamis
 Bitcoin:
   filename: data/bitcoin.csv
-  title: Bitcoin price
+  title: The price of a cryptocurrency
   x: Date
-  y: U.S. Dollars (hundreds)
+  y: Hundreds of U.S. dollars
+  x_end: on March 3, 2018
   x_text: days
   y_text: hundred U.S. dollars
-  quantity: the price of bitcoin
+  quantity: the price of the cryptocurrency
   fewer_less: less
   append: hundred U.S. dollars
   know_about: bitcoin
@@ -32,33 +36,37 @@ SongTempo:
   title: Average tempo of newly-released songs
   x: Year
   y: Beats per minute
+  x_end: in 2020
   x_text: years
   quantity: the average tempo of newly released songs
   fewer_less: less
   know_about: recent trends in music
 ClimateChange:
   filename: data/climate_change.csv
-  title: Google search trends for "Climate change"
+  title: Internet search trends gauging public interest in climate change
   x: Month
-  y: Google search popularity
+  y: Public interest
+  x_end: in January, 2021
   x_text: months
   y_text: ""
-  quantity: '"climate change"''s Google search popularity score'
+  quantity: public interest in climate change
   fewer_less: less
   know_about: public interest in climate change
 PoliceShootings:
   filename: data/police_shootings.csv
-  title: Fatal police shootings in the U.S.
+  title: Fatal police shootings in a representative sample of locations across the U.S.
   x: Month
   y: Fatal police shootings
+  x_end: in January, 2021
   x_text: months
   fewer_less: fewer
   know_about: police shootings
 Meteors:
   filename: data/meteor_falls.csv
-  title: Recorded meteor falls
+  title: Meteors found according to a major astrophysical monitoring organization
   x: Year
   y: Meteor falls
+  x_end: in 2013
   x_text: years
   fewer_less: fewer
   know_about: meteors
@@ -67,17 +75,19 @@ TrumpTweets:
   title: Number of tweets from @RealDonaldTrump
   x: Month
   y: Tweets
+  x_end: in January, 2021
   x_text: months
   y_text: tweets from @RealDonaldTrump
   fewer_less: fewer
   know_about: Donald Trump's twitter
 VaccineSearches:
   filename: data/vaccine_google_searches.csv
-  title: Google search trends for "Vaccine"
+  title: Internet search trends gauging public interest in vaccines
   x: Month
-  y: Google search popularity
+  y: Public interest
+  x_end: in January, 2021
   x_text: months
   y_text: ""
-  quantity: '"vaccine"''s Google search popularity score'
+  quantity: public interest in vaccines
   fewer_less: less
   know_about: public interest in vaccines

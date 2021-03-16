@@ -12,8 +12,8 @@ try:
 except:
     from yaml import load, Loader
 
-# number of time steps to display
-DISPLAY_TIME_STEPS = 60
+# percent of time steps to display
+DISPLAY_TIME_STEPS = .7
 
 # load forecast questions
 forecast_questions = load(open('forecasts.yaml', 'r'), Loader=Loader)
@@ -38,8 +38,6 @@ def make_dashboard(app=None):
     ], className='container')
 
     def make_graphs(key):
-        from survey import TIME_STEPS
-
         def make_graph(df, title, labels):
             return dcc.Graph(
                 id='graph',
@@ -50,8 +48,8 @@ def make_dashboard(app=None):
 
         content = forecast_questions[key]
         df = pd.read_csv(content['filename'])
-        df = df.iloc[-DISPLAY_TIME_STEPS-TIME_STEPS:]
-        df['y'].iloc[-TIME_STEPS:] = None
+        # block out last time steps
+        df['y'].iloc[int(DISPLAY_TIME_STEPS*len(df)):] = None
         df_no_context = df.copy()
         df_no_context['Time'] = list(range(len(df)))
         return {
