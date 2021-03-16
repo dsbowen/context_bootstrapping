@@ -14,7 +14,7 @@
         },
         "DEBUG_FUNCTIONS": {
             "description": "Set to 'False' in production.",
-            "value": "True"
+            "value": "False"
         },
         "PASSWORD": {
             "description": "Replace 'my-password' with a password to protect your survey data.",
