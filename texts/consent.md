@@ -6,7 +6,7 @@ Please read the following information, and indicate your consent to participate.
 
 **Procedures** You will be asked to make point estimates and give 95% confidence intervals such that you are 95% sure the true answers falls inside.  
  
-**Benefits & Compensation** You will be compensated $5 Amazon gift card for your time as long as you pass the attention check and finish all questions in the survey. If your forecasts are among the 3 most accurate ones,  we'll send you an additional bonus prize - $5 Amazon gift card - as soon as the study is completed.    
+**Benefits & Compensation** You will be compensated $2 for your time as long as you pass the attention check and finish all questions in the survey. If your forecasts are among the 3 most accurate ones,  we'll give you an additional $5 bonus.    
 
 **Risks** There no known risks or discomforts associated with participating in this study. Participation in this research is completely voluntary. You have the right to decline to participate or to withdraw at any point.
 
