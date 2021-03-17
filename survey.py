@@ -116,10 +116,11 @@ def first_estimates_branch(start_branch=None):
         *[
             Page(
                 Label(progress(i/N_FCASTS, f'Estimate {i+1} of {N_FCASTS}')),
-                Dashboard(
-                    src='/dashapp/', 
-                    g={'fcast_key': key, 'context': context}
-                ),
+                Label('Graph goes here'),
+                # Dashboard(
+                #     src='/dashapp/', 
+                #     g={'fcast_key': key, 'context': context}
+                # ),
                 *questions,
                 timer='FirstEstimateTime'
             ) 
