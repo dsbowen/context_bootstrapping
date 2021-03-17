@@ -116,35 +116,37 @@ def first_estimates_branch(start_branch=None):
             Label(INSTRUCTIONS['first'][current_user.meta['Context']])
         ),
         # make_page_chain(N_FCASTS, make_first_estimate_page, context=context),
-        *[
-            Page(
-                Label(progress(i/N_FCASTS, f'Estimate {i+1} of {N_FCASTS}')),
-                # Dashboard(
-                #     src='/dashapp/', 
-                #     g={'fcast_key': key, 'context': context}
-                # ),
-                *questions,
-                timer='FirstEstimateTime'
-            ) 
-            for i, (key, questions) in enumerate(first_estimate_questions)
-        ],
-        navigate=second_estimates_branch
+        # *[
+        #     Page(
+        #         Label(progress(i/N_FCASTS, f'Estimate {i+1} of {N_FCASTS}')),
+        #         # Dashboard(
+        #         #     src='/dashapp/', 
+        #         #     g={'fcast_key': key, 'context': context}
+        #         # ),
+        #         *questions,
+        #         timer='FirstEstimateTime'
+        #     ) 
+        #     for i, (key, questions) in enumerate(first_estimate_questions)
+        # ],
+        navigate=N(make_page_chain, N_FCASTS, make_first_estimate_page, kwargs=dict(context=context), navigate=second_estimates_branch)
     )
 
 from hemlock import Submit as S
 
-def make_page_chain(n_pages, make_page, *args, **kwargs):
-    page = make_page(0, *args, **kwargs)
+def make_page_chain(curr_branch, n_pages, make_page, navigate, args=[], kwargs={}):
+    branch = Branch(make_page(0, *args, **kwargs))
     if n_pages > 1:
-        page.navigate = N(make_next_branch, 1, n_pages, make_page, args, kwargs)
-    return page
+        branch.navigate = N(make_next_branch, 1, n_pages, make_page, args, kwargs, navigate)
+    return branch
 
-def make_next_branch(page, i, n_pages, make_page, args, kwargs):
+def make_next_branch(curr_branch, i, n_pages, make_page, args, kwargs, navigate):
     print('npages is', n_pages)
     print('current page is', i)
     branch = Branch(make_page(i, *args, **kwargs))
     if i+1 < n_pages:
         branch.navigate = N(make_next_branch, i+1, n_pages, make_page, args, kwargs)
+    else:
+        branch.navigate = navigate
     return branch
 
 def make_first_estimate_page(i, context):
