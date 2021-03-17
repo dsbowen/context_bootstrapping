@@ -81,8 +81,6 @@ def start():
         navigate=first_estimates_branch
     )
 
-from hemlock import db
-
 @route('/survey')
 def first_estimates_branch(start_branch=None):
     """
@@ -110,52 +108,24 @@ def first_estimates_branch(start_branch=None):
 
     assigner.next()
     context = use_context(first_estimate=True)
-    current_user.g['first_estimate_questions'] = first_estimate_questions = make_first_estimate_questions()
+    first_estimate_questions = make_first_estimate_questions()
     return Branch(
         Page(
             Label(INSTRUCTIONS['first'][current_user.meta['Context']])
         ),
-        # make_page_chain(N_FCASTS, make_first_estimate_page, context=context),
-        # *[
-        #     Page(
-        #         Label(progress(i/N_FCASTS, f'Estimate {i+1} of {N_FCASTS}')),
-        #         # Dashboard(
-        #         #     src='/dashapp/', 
-        #         #     g={'fcast_key': key, 'context': context}
-        #         # ),
-        #         *questions,
-        #         timer='FirstEstimateTime'
-        #     ) 
-        #     for i, (key, questions) in enumerate(first_estimate_questions)
-        # ],
-        navigate=N(make_page_chain, N_FCASTS, make_first_estimate_page, kwargs=dict(context=context), navigate=second_estimates_branch)
-    )
-
-from hemlock import Submit as S
-
-def make_page_chain(curr_branch, n_pages, make_page, navigate, args=[], kwargs={}):
-    branch = Branch(make_page(0, *args, **kwargs))
-    if n_pages > 1:
-        branch.navigate = N(make_next_branch, 1, n_pages, make_page, args, kwargs, navigate)
-    return branch
-
-def make_next_branch(curr_branch, i, n_pages, make_page, args, kwargs, navigate):
-    print('npages is', n_pages)
-    print('current page is', i)
-    branch = Branch(make_page(i, *args, **kwargs))
-    if i+1 < n_pages:
-        branch.navigate = N(make_next_branch, i+1, n_pages, make_page, args, kwargs)
-    else:
-        branch.navigate = navigate
-    return branch
-
-def make_first_estimate_page(i, context):
-    key, questions = current_user.g['first_estimate_questions'][i]
-    return Page(
-        Label(progress(i/N_FCASTS, f'Estimate {i+1} of {N_FCASTS}')),
-        # Dashboard(src='/dashapp/', g={'fcast_key': key, 'context': context}),
-        *questions,
-        timer='FirstEstimateTime'
+        *[
+            Page(
+                Label(progress(i/N_FCASTS, f'Estimate {i+1} of {N_FCASTS}')),
+                Dashboard(
+                    src='/dashapp/', 
+                    g={'fcast_key': key, 'context': context}
+                ),
+                *questions,
+                timer='FirstEstimateTime'
+            ) 
+            for i, (key, questions) in enumerate(first_estimate_questions)
+        ],
+        navigate=N.second_estimates_branch(first_estimate_questions)
     )
 
 def use_context(first_estimate):
@@ -255,7 +225,7 @@ def get_content_item(content, key, substitute):
     return item
 
 @N.register
-def second_estimates_branch(first_estimate_branch):
+def second_estimates_branch(first_estimate_branch, first_estimate_questions):
     """Create branch for second estimates
 
     :param first_estimate_branch: branch for first estimates
@@ -350,7 +320,6 @@ def second_estimates_branch(first_estimate_branch):
             )
         ]
 
-    first_estimate_questions = current_user.g['first_estimate_questions']
     context = use_context(first_estimate=False)
     return Branch(
         Page(
