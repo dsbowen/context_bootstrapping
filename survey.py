@@ -136,17 +136,16 @@ from hemlock import Submit as S
 def make_page_chain(n_pages, make_page, *args, **kwargs):
     page = make_page(0, *args, **kwargs)
     if n_pages > 1:
-        page.submit = S(make_next_branch, 1, n_pages, make_page, args, kwargs)
+        page.navigate = N(make_next_branch, 1, n_pages, make_page, args, kwargs)
     return page
 
 def make_next_branch(page, i, n_pages, make_page, args, kwargs):
     print('npages is', n_pages)
     print('current page is', i)
-    next_page = make_page(i, *args, **kwargs)
+    branch = Branch(make_page(i, *args, **kwargs))
     if i+1 < n_pages:
-        next_page.submit = S(make_next_branch, i+1, n_pages, make_page, args, kwargs)
-    page.branch.pages.insert(page.index+1, next_page)
-    return next_page
+        branch.navigate = N(make_next_branch, i+1, n_pages, make_page, args, kwargs)
+    return branch
 
 def make_first_estimate_page(i, context):
     key, questions = current_user.g['first_estimate_questions'][i]
