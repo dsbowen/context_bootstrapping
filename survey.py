@@ -110,63 +110,40 @@ def first_estimates_branch(start_branch=None):
 
     assigner.next()
     context = use_context(first_estimate=True)
-    first_estimate_questions = make_first_estimate_questions()
-    first_estimate_pages = [
-        Page(
-            Label(progress(i/N_FCASTS, f'Estimate {i+1} of {N_FCASTS}')),
-            # Dashboard(
-            #     src='/dashapp/', 
-            #     g={'fcast_key': key, 'context': context}
-            # ),
-            *questions,
-            timer='FirstEstimateTime'
-        ) 
-        for i, (key, questions) in enumerate(first_estimate_questions)
-    ]
-    db.session.add_all(first_estimate_pages)
-    db.session.flush(first_estimate_pages)
+    current_user.g['first_estimate_questions'] = first_estimate_questions = make_first_estimate_questions()
     return Branch(
         Page(
             Label(INSTRUCTIONS['first'][current_user.meta['Context']])
         ),
-        *first_estimate_pages,
-        # *[
-        #     Page(
-        #         Label(progress(i/N_FCASTS, f'Estimate {i+1} of {N_FCASTS}')),
-        #         # Dashboard(
-        #         #     src='/dashapp/', 
-        #         #     g={'fcast_key': key, 'context': context}
-        #         # ),
-        #         *questions,
-        #         timer='FirstEstimateTime'
-        #     ) 
-        #     for i, (key, questions) in enumerate(first_estimate_questions)
-        # ],
-        navigate=N.second_estimates_branch(first_estimate_questions)
+        # make_page_chain(N_FCASTS, make_first_estimate_page, first_estimate_questions, context=context),
+        *[
+            Page(
+                Label(progress(i/N_FCASTS, f'Estimate {i+1} of {N_FCASTS}')),
+                # Dashboard(
+                #     src='/dashapp/', 
+                #     g={'fcast_key': key, 'context': context}
+                # ),
+                *questions,
+                timer='FirstEstimateTime'
+            ) 
+            for i, (key, questions) in enumerate(first_estimate_questions)
+        ],
+        navigate=second_estimates_branch
     )
-
-from sqlalchemy_mutable import partial
-from hemlock import Submit as S
 
 def make_page_chain(n_pages, make_page, *args, **kwargs):
     page = make_page(0, *args, **kwargs)
     if n_pages > 1:
-        page.submit.append(S(make_next_page, 1, n_pages, make_page, args, kwargs))
+        page.navigate = N(make_next_branch, 1, n_pages, make_page, args, kwargs)
     return page
 
-def make_next_page(page, i, n_pages, make_page, args, kwargs):
+def make_next_branch(page, i, n_pages, make_page, args, kwargs):
     print('npages is', n_pages)
     print('current page is', i)
-    next_page = make_page(i, *args, **kwargs)
-    # from hemlock import db
-    # db.session.add(next_page)
-    # db.session.commit()
+    branch = Branch(make_page(i, *args, **kwargs))
     if i+1 < n_pages:
-        next_page.submit = next_page.submit+[S(make_next_page, i+1, n_pages, make_page, args, kwargs)]
-    page.branch.pages.insert(page.index+1, next_page)
-    # print('submit functions', next_page.submit)
-    # db.session.commit()
-    # print('submit functions', next_page.submit)
+        branch.navigate = N(make_next_branch, i+1, n_pages, make_page, args, kwargs)
+    return branch
 
 def make_first_estimate_page(i, first_estimate_questions, context):
     key, questions = first_estimate_questions[i]
@@ -274,7 +251,7 @@ def get_content_item(content, key, substitute):
     return item
 
 @N.register
-def second_estimates_branch(first_estimate_branch, first_estimate_questions):
+def second_estimates_branch(first_estimate_branch):
     """Create branch for second estimates
 
     :param first_estimate_branch: branch for first estimates
@@ -369,6 +346,7 @@ def second_estimates_branch(first_estimate_branch, first_estimate_questions):
             )
         ]
 
+    first_estimate_questions = current_user.g['first_estimate_questions']
     context = use_context(first_estimate=False)
     return Branch(
         Page(
