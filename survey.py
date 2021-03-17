@@ -115,19 +115,19 @@ def first_estimates_branch(start_branch=None):
         Page(
             Label(INSTRUCTIONS['first'][current_user.meta['Context']])
         ),
-        make_page_chain(N_FCASTS, make_first_estimate_page, context=context),
-        # *[
-        #     Page(
-        #         Label(progress(i/N_FCASTS, f'Estimate {i+1} of {N_FCASTS}')),
-        #         # Dashboard(
-        #         #     src='/dashapp/', 
-        #         #     g={'fcast_key': key, 'context': context}
-        #         # ),
-        #         *questions,
-        #         timer='FirstEstimateTime'
-        #     ) 
-        #     for i, (key, questions) in enumerate(first_estimate_questions)
-        # ],
+        # make_page_chain(N_FCASTS, make_first_estimate_page, context=context),
+        *[
+            Page(
+                Label(progress(i/N_FCASTS, f'Estimate {i+1} of {N_FCASTS}')),
+                # Dashboard(
+                #     src='/dashapp/', 
+                #     g={'fcast_key': key, 'context': context}
+                # ),
+                *questions,
+                timer='FirstEstimateTime'
+            ) 
+            for i, (key, questions) in enumerate(first_estimate_questions)
+        ],
         navigate=second_estimates_branch
     )
 
