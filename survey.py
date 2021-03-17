@@ -81,6 +81,8 @@ def start():
         navigate=first_estimates_branch
     )
 
+from hemlock import db
+
 @route('/survey')
 def first_estimates_branch(start_branch=None):
     """
@@ -109,28 +111,37 @@ def first_estimates_branch(start_branch=None):
     assigner.next()
     context = use_context(first_estimate=True)
     first_estimate_questions = make_first_estimate_questions()
+    first_estimate_pages = [
+        Page(
+            Label(progress(i/N_FCASTS, f'Estimate {i+1} of {N_FCASTS}')),
+            # Dashboard(
+            #     src='/dashapp/', 
+            #     g={'fcast_key': key, 'context': context}
+            # ),
+            *questions,
+            timer='FirstEstimateTime'
+        ) 
+        for i, (key, questions) in enumerate(first_estimate_questions)
+    ]
+    db.session.add_all(first_estimate_pages)
+    db.session.flush(first_estimate_pages)
     return Branch(
         Page(
             Label(INSTRUCTIONS['first'][current_user.meta['Context']])
         ),
-        # make_page_chain(
-        #     N_FCASTS, 
-        #     make_first_estimate_page,
-        #     first_estimate_questions, 
-        #     context=context
-        # ),
-        *[
-            Page(
-                Label(progress(i/N_FCASTS, f'Estimate {i+1} of {N_FCASTS}')),
-                # Dashboard(
-                #     src='/dashapp/', 
-                #     g={'fcast_key': key, 'context': context}
-                # ),
-                *questions,
-                timer='FirstEstimateTime'
-            ) 
-            for i, (key, questions) in enumerate(first_estimate_questions)
-        ],
+        *first_estimate_pages,
+        # *[
+        #     Page(
+        #         Label(progress(i/N_FCASTS, f'Estimate {i+1} of {N_FCASTS}')),
+        #         # Dashboard(
+        #         #     src='/dashapp/', 
+        #         #     g={'fcast_key': key, 'context': context}
+        #         # ),
+        #         *questions,
+        #         timer='FirstEstimateTime'
+        #     ) 
+        #     for i, (key, questions) in enumerate(first_estimate_questions)
+        # ],
         navigate=N.second_estimates_branch(first_estimate_questions)
     )
 
