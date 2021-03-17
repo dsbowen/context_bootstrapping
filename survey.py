@@ -81,6 +81,7 @@ def start():
         navigate=first_estimates_branch
     )
 
+@route('/survey')
 def first_estimates_branch(start_branch=None):
     """
     :param start_branch: 
