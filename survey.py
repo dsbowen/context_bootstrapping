@@ -81,7 +81,6 @@ def start():
         navigate=first_estimates_branch
     )
 
-@route('/survey')
 def first_estimates_branch(start_branch=None):
     """
     :param start_branch: 
@@ -116,11 +115,11 @@ def first_estimates_branch(start_branch=None):
         *[
             Page(
                 Label(progress(i/N_FCASTS, f'Estimate {i+1} of {N_FCASTS}')),
-                Label('Graph goes here'),
-                # Dashboard(
-                #     src='/dashapp/', 
-                #     g={'fcast_key': key, 'context': context}
-                # ),
+                # Label('Graph goes here'),
+                Dashboard(
+                    src='/dashapp/', 
+                    g={'fcast_key': key, 'context': context}
+                ),
                 *questions,
                 timer='FirstEstimateTime'
             ) 

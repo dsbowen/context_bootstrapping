@@ -67,16 +67,16 @@ def make_dashboard(app=None):
         ], id='graph-container')
     ], className='container')
 
-    # @dash_app.callback(
-    #     Output('graph-container', 'children'),
-    #     [Input('url', 'search')]
-    # )
-    # def load_graph(search):
-    #     if app is None:
-    #         print('WARNING: No dashboard located')
-    #         return [graphs['COVID_cases'][True]]
-    #     g = Dashboard.get(search).g
-    #     return [graphs[g['fcast_key']][g['context']]]
+    @dash_app.callback(
+        Output('graph-container', 'children'),
+        [Input('url', 'search')]
+    )
+    def load_graph(search):
+        if app is None:
+            print('WARNING: No dashboard located')
+            return [graphs['COVID_cases'][True]]
+        g = Dashboard.get(search).g
+        return [graphs[g['fcast_key']][g['context']]]
 
     return dash_app
 
