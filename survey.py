@@ -19,7 +19,7 @@ from random import shuffle
 # percentiles of the distribution predicted by the participant
 PERCENTILES = (5, 50, 95)
 # number of time-series forecasts made by each participant
-N_FCASTS = 6
+N_FCASTS = 1
 
 # templates for the elicitation question with and without context, e.g.,
 # pctile=50, 
