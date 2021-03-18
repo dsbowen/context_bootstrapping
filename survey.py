@@ -58,7 +58,7 @@ forecast_questions = load(open('forecasts.yaml', 'r'), Loader=Loader)
 # randomly selects keys for the forecast questions
 fcast_selector = Randomizer(list(forecast_questions.keys()), r=N_FCASTS)
 
-# @route('/survey')
+@route('/survey')
 def start():
     """
     :return: branch with consent form and preliminary questions
@@ -81,7 +81,7 @@ def start():
         navigate=first_estimates_branch
     )
 
-@route('/survey')
+# @route('/survey')
 def first_estimates_branch(start_branch=None):
     """
     :param start_branch: 
