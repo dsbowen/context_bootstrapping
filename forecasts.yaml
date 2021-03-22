@@ -1,5 +1,5 @@
 COVID_cases:
-  filename: data/covid_cases.csv
+  filename: time_series_data/covid_cases.csv
   title: Recent study of a representative sample of daily new COVID-19 cases in regions of the U.S.
   x: Date
   y: New daily cases (thousands)
@@ -11,7 +11,7 @@ COVID_cases:
   append: thousand new daily cases
   know_about: COVID-19 case trends in the U.S.
 Tsunamis:
-  filename: data/tsunamis.csv
+  filename: time_series_data/tsunamis.csv
   title: Tsunamis
   x: Year
   y: Tsunamis
@@ -20,7 +20,7 @@ Tsunamis:
   fewer_less: fewer
   know_about: tsunamis
 Bitcoin:
-  filename: data/bitcoin.csv
+  filename: time_series_data/bitcoin.csv
   title: The price of a cryptocurrency
   x: Date
   y: Hundreds of U.S. dollars
@@ -32,7 +32,7 @@ Bitcoin:
   append: hundred U.S. dollars
   know_about: bitcoin
 SongTempo:
-  filename: data/song_tempo.csv
+  filename: time_series_data/song_tempo.csv
   title: Average tempo of newly-released songs
   x: Year
   y: Beats per minute
@@ -42,7 +42,7 @@ SongTempo:
   fewer_less: less
   know_about: recent trends in music
 ClimateChange:
-  filename: data/climate_change.csv
+  filename: time_series_data/climate_change.csv
   title: Internet search trends gauging public interest in climate change
   x: Month
   y: Public interest
@@ -53,7 +53,7 @@ ClimateChange:
   fewer_less: less
   know_about: public interest in climate change
 PoliceShootings:
-  filename: data/police_shootings.csv
+  filename: time_series_data/police_shootings.csv
   title: Fatal police shootings in a representative sample of locations across the U.S.
   x: Month
   y: Fatal police shootings
@@ -62,7 +62,7 @@ PoliceShootings:
   fewer_less: fewer
   know_about: police shootings
 Meteors:
-  filename: data/meteor_falls.csv
+  filename: time_series_data/meteor_falls.csv
   title: Meteors found according to a major astrophysical monitoring organization
   x: Year
   y: Meteor falls
@@ -71,7 +71,7 @@ Meteors:
   fewer_less: fewer
   know_about: meteors
 TrumpTweets:
-  filename: data/trump_tweets.csv
+  filename: time_series_data/trump_tweets.csv
   title: Number of tweets from @RealDonaldTrump
   x: Month
   y: Tweets
@@ -81,7 +81,7 @@ TrumpTweets:
   fewer_less: fewer
   know_about: Donald Trump's twitter
 VaccineSearches:
-  filename: data/vaccine_google_searches.csv
+  filename: time_series_data/vaccine_google_searches.csv
   title: Internet search trends gauging public interest in vaccines
   x: Month
   y: Public interest
